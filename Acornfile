@@ -1,0 +1,91 @@
+args: {
+    // MariaDB database
+    dbName: "demo"
+    // MariaDB user
+    dbUser: "demo"
+    // MariaDB port
+    dbPort: 3306
+    // DB parameters
+    dbParam: "parseTime=true"
+}
+
+containers: app: {
+    build: {
+        context: "."
+    }
+    env: {
+        DB_NAME: args.dbName
+        DB_HOST: "db"
+        DB_PORT: "\(args.dbPort)"
+        DB_USER: args.dbUser
+        DB_PASS: "secret://dbuser/password"
+        DB_PARAMS: args.dbParam
+    }
+    probe: "http://localhost:8080/ping"
+    if args.dev {
+        build: target: "dev"
+        dirs: "/src": "./"
+        tty: true
+    }
+    if !args.dev {
+        env: GIN_MODE: "release"
+    }
+    ports: "8080/http"
+    dependsOn: ["db", "migrate"]
+}
+
+containers: web: {
+    image: "nginx"
+    ports: "80/http"
+    dirs: "/usr/share/nginx/html/": "./static"
+}
+
+containers: db: {
+    env: {
+        MARIADB_ROOT_PASSWORD: "secret://dbroot/password"
+        MARIADB_USER: args.dbUser
+        MARIADB_PASSWORD: "secret://dbuser/password"
+        MARIADB_DATABASE: args.dbName
+    }
+    probe: {
+        "readiness": {
+            exec: command: ["bash", "-c", "mysql -u $MARIADB_USER -p${MARIADB_PASSWORD} -e 'select 1' ${MARIADB_DATABASE}"]
+        }
+    }
+    ports: 3306
+    image: "mariadb:10.9"
+    dirs: "/data": "db-data"
+}
+
+jobs: migrate: {
+    env: containers.app.env
+    build: {
+        context: "."
+    }
+    command: "-migrate"
+    dependsOn: ["db"]
+}
+
+routers: default: {
+    routes: {
+        "/": "web:80"
+        "/todo": "app:8080"
+    }
+}
+
+
+secrets: dbuser: {
+    type: "basic"
+    if args.dev {
+        data: password: "demo"
+    }
+}
+
+secrets: dbroot: {
+    type: "basic"
+    if args.dev {
+        data: {
+            password: "root"
+        }
+    }
+}
