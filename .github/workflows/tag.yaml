@@ -19,4 +19,4 @@ jobs:
           echo "TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: Build and Push
         run: |
-          acorn build --push -t ghcr.io/${{ github.repository }}:$TAG .
+          acorn build --platform linux/amd64 --platform linux/arm64 --push -t ghcr.io/${{ github.repository }}:$TAG .

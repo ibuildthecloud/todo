@@ -1,0 +1,67 @@
+args: {
+    // MariaDB database
+    dbName: "demo"
+    // MariaDB user
+    dbUser: "demo"
+    // Backup schedule (example: "hourly" or "* * * * */15")
+    backupSchedule: ""
+}
+
+containers: db: {
+    env: {
+        MARIADB_ROOT_PASSWORD: "secret://dbroot/password"
+        MARIADB_USER: args.dbUser
+        MARIADB_PASSWORD: "secret://dbuser/password"
+        MARIADB_DATABASE: args.dbName
+    }
+    probe: {
+        "readiness": {
+            exec: command: ["bash", "-c", "mysql -u $MARIADB_USER -p${MARIADB_PASSWORD} -e 'select 1' ${MARIADB_DATABASE}"]
+        }
+    }
+    ports: expose: 3306
+    image: "mariadb:10.6.8-focal"
+    dirs: "/var/lib/mysql": "db-data"
+}
+
+secrets: dbuser: {
+    type: "basic"
+    data: username: args.dbUser
+    if args.dev {
+        data: password: "demo"
+    }
+}
+
+secrets: dbroot: {
+    type: "basic"
+    if args.dev {
+        data: {
+            password: "root"
+        }
+    }
+}
+
+if args.backupSchedule != "" {
+    jobs: backup: {
+        image: "mariadb:10.6.8-focal"
+        command: ["/acorn/scripts/backup.sh", "db"]
+        dirs: {
+            "/var/lib/mysql": "db-data"
+            "/backups":       "db-backup"
+        }
+        env: {
+            "MARIADB_BACKUP_USER":     "root"
+            "MARIADB_BACKUP_PASSWORD": containers.db.env["MARIADB_ROOT_PASSWORD"]
+        }
+        schedule: "\(args.backupSchedule)"
+        dirs: "/acorn/scripts/": "./scripts"
+        dependsOn: "db"
+    }
+
+    secrets: "backup-list": {
+        type: "generated"
+        params: {
+            job: "backup"
+        }
+    }
+}

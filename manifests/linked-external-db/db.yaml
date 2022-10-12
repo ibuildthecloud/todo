@@ -1,0 +1,8 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: todo-linked-external-db
+  namespace: acorn
+spec:
+  type: ExternalName
+  externalName: database-1.cq9qbpt751xh.us-east-2.rds.amazonaws.com

@@ -1,0 +1,13 @@
+apiVersion: api.acorn.io/v1
+kind: App
+metadata:
+  name: todo-linked-app
+  namespace: acorn
+spec:
+  image: todo
+  secrets:
+  - secret: todo-linked-db.dbuser
+    target: dbuser
+  services:
+  - service: todo-linked-db
+    target: db

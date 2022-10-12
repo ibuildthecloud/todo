@@ -16,4 +16,4 @@ jobs:
       - name: Build
         run: |
           set -e
-          acorn build .
+          acorn build --platform linux/amd64 --platform linux/arm64 .

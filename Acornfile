@@ -1,8 +1,6 @@
 args: {
     // MariaDB database
     dbName: "demo"
-    // MariaDB user
-    dbUser: "demo"
     // MariaDB port
     dbPort: 3306
     // DB parameters
@@ -17,7 +15,7 @@ containers: app: {
         DB_NAME: args.dbName
         DB_HOST: "db"
         DB_PORT: "\(args.dbPort)"
-        DB_USER: args.dbUser
+        DB_USER: "secret://dbuser/username"
         DB_PASS: "secret://dbuser/password"
         DB_PARAMS: args.dbParam
     }
@@ -43,7 +41,7 @@ containers: web: {
 containers: db: {
     env: {
         MARIADB_ROOT_PASSWORD: "secret://dbroot/password"
-        MARIADB_USER: args.dbUser
+        MARIADB_USER: "secret://dbuser/username"
         MARIADB_PASSWORD: "secret://dbuser/password"
         MARIADB_DATABASE: args.dbName
     }
@@ -53,7 +51,7 @@ containers: db: {
         }
     }
     ports: 3306
-    image: "mariadb:10.9"
+    image: "mariadb:10.6.8-focal"
     dirs: "/var/lib/mysql": "db-data"
 }
 
@@ -77,7 +75,10 @@ routers: default: {
 secrets: dbuser: {
     type: "basic"
     if args.dev {
-        data: password: "demo"
+        data: {
+            username: "demo"
+            password: "demo"
+        }
     }
 }
 

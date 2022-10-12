@@ -1,0 +1,11 @@
+kind: App
+apiVersion: api.acorn.io/v1
+metadata:
+  name: todo-linked-ha-db
+  namespace: acorn
+spec:
+  deployArgs:
+    dbName: demo
+    dbUserName: demo
+    replicas: 3
+  image: ghcr.io/acorn-io/library/mariadb

@@ -1,0 +1,7 @@
+apiVersion: api.acorn.io/v1
+kind: App
+metadata:
+  name: todo-linked-db
+  namespace: acorn
+spec:
+  image: todo-db
