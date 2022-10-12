@@ -54,7 +54,7 @@ containers: db: {
     }
     ports: 3306
     image: "mariadb:10.9"
-    dirs: "/data": "db-data"
+    dirs: "/var/lib/mysql": "db-data"
 }
 
 jobs: migrate: {
